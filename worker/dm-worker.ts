@@ -5,9 +5,22 @@ import { reconcileComments } from "@/lib/polling/comment-reconciler";
 import { attachPendingNextReels } from "@/lib/automation/attach-next-reel";
 import os from "node:os";
 
+import http from "node:http";
+
 const worker = createDMWorker();
 const startedAt = new Date().toISOString();
 const HEARTBEAT_INTERVAL_MS = 30_000;
+
+// Expose a lightweight HTTP health check if PORT is provided (e.g. Render Free Web Service)
+const port = process.env.PORT;
+if (port) {
+  http.createServer((_req, res) => {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ status: "ok", worker: "dm", startedAt }));
+  }).listen(Number(port), () => {
+    console.log(`[DM Worker] Health check listening on port ${port}`);
+  });
+}
 // Polling safety net for comments that webhooks miss. Runs in the worker because
 // it must fire every few minutes and Vercel's free crons only run once a day.
 const POLL_INTERVAL_MS = Number(
