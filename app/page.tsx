@@ -139,7 +139,7 @@ export default async function Home() {
             <a className="or-nav-signin" href="/login">
               Sign in
             </a>
-            <a className="or-button or-button-small" href="/login">
+            <a className="or-button or-button-small" href="/signup">
               Get started <span aria-hidden="true">↗</span>
             </a>
           </div>
@@ -158,7 +158,7 @@ export default async function Home() {
               them a DM automatically. Built for scale, security, and reliability.
             </p>
             <div className="or-actions">
-              <a className="or-button or-button-primary" href="/login">
+              <a className="or-button or-button-primary" href="/signup">
                 Get started <span aria-hidden="true">↗</span>
               </a>
               <a className="or-text-link" href="#how">
