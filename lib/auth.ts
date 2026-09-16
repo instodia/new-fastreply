@@ -6,7 +6,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db/client";
 import { ensureWorkspaceForUser, getPrimaryWorkspace } from "@/lib/workspace";
 import { isEmailAllowedToSignIn } from "@/lib/env";
-import { verifyPassword } from "@/lib/auth-passwords";
+import { hashPassword, verifyPassword } from "@/lib/auth-passwords";
 
 type AdapterPrismaClient = Parameters<typeof PrismaAdapter>[0];
 
@@ -40,13 +40,24 @@ export const authConfig = {
           where: { email },
         });
 
-        if (!user || !user.passwordHash) {
+        if (!user) {
           return null;
         }
 
-        const isValid = await verifyPassword(password, user.passwordHash);
-        if (!isValid) {
-          return null;
+        if (!user.passwordHash) {
+          // Account created prior to password requirement:
+          // Claim and set the password on first login
+          if (password.length < 6) return null;
+          const newHash = await hashPassword(password);
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { passwordHash: newHash },
+          });
+        } else {
+          const isValid = await verifyPassword(password, user.passwordHash);
+          if (!isValid) {
+            return null;
+          }
         }
 
         await ensureWorkspaceForUser(user.id, user.email);
